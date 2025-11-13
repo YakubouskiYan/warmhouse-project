@@ -8,11 +8,13 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: smarthome
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./smart_home/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
+    volumes:
+      - ./smart_home/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    command: >
+      sh -c "psql -U postgres -d smarthome -f /docker-entrypoint-initdb.d/init.sql || true &&
+      docker-entrypoint.sh postgres"
     networks:
       - smarthome-network
     healthcheck:
@@ -20,7 +22,12 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    restart: unless-stopped    
+    restart: unless-stopped  
+
+
+
+
+
 
 # === TEMPERATURE API (Go) ===
   temperature-api:

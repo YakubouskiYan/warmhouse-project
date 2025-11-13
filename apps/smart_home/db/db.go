@@ -17,18 +17,24 @@ type DB struct {
 }
 
 // New creates a new DB instance
+// Явно переключаем на схему smarthomeпосле подключения
 func New(connString string) (*DB, error) {
-	pool, err := pgxpool.New(context.Background(), connString)
-	if err != nil {
-		return nil, fmt.Errorf("unable to connect to database: %w", err)
-	}
+    pool, err := pgxpool.New(context.Background(), connString)
+    if err != nil {
+        return nil, fmt.Errorf("unable to connect to database: %w", err)
+    }
 
-	// Test the connection
-	if err := pool.Ping(context.Background()); err != nil {
-		return nil, fmt.Errorf("unable to ping database: %w", err)
-	}
+    // УСТАНАВЛИВАЕМ СХЕМУ ПО УМОЛЧАНИЮ
+    _, err = pool.Exec(context.Background(), "SET search_path TO smarthome")
+    if err != nil {
+        return nil, fmt.Errorf("failed to set search_path: %w", err)
+    }
 
-	return &DB{Pool: pool}, nil
+    if err := pool.Ping(context.Background()); err != nil {
+        return nil, fmt.Errorf("unable to ping database: %w", err)
+    }
+
+    return &DB{Pool: pool}, nil
 }
 
 // Close closes the database connection
